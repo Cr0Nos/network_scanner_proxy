@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
-import subprocess
+from pythonping import ping
 from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
@@ -35,10 +35,11 @@ def scan_network():
 
     def ping_host(ip):
         """Пингует IP-адрес и возвращает его, если доступен."""
-        param = "-n" if subprocess.os.name == "nt" else "-c"
-        command = ["ping", param, "1", ip]
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return ip if result.returncode == 0 else None
+        try:
+            response = ping(ip, count=1, timeout=1)
+            return ip if response.success() else None
+        except Exception:
+            return None
 
     active_hosts = []
     with ThreadPoolExecutor() as executor:
